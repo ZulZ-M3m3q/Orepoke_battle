@@ -1,17 +1,11 @@
 import { usePokemonGame } from '@/lib/stores/usePokemonGame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Camera, BookOpen, Zap, Sparkles } from 'lucide-react';
+import { Camera, CreditCard, Swords } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function MainMenu() {
-  const { setPhase, collection, startWildBattle } = usePokemonGame();
-
-  const handleRandomEncounter = async () => {
-    const randomId = Math.floor(Math.random() * 898) + 1;
-    await startWildBattle(randomId.toString());
-  };
+  const { setPhase } = usePokemonGame();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-600 via-red-500 to-yellow-400 flex flex-col items-center justify-center p-4">
@@ -65,60 +59,33 @@ export function MainMenu() {
         <Card className="bg-white/95 shadow-2xl">
           <CardContent className="p-6 space-y-4">
             <Button
-              onClick={() => setPhase('scanning')}
+              onClick={() => setPhase('scan_wild')}
               className="w-full h-14 text-lg bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg"
             >
-              <Camera className="w-6 h-6 mr-3" />
-              Scan QR Code
+              <Swords className="w-6 h-6 mr-3" />
+              Start Battle
             </Button>
 
             <Button
-              onClick={handleRandomEncounter}
-              className="w-full h-14 text-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg"
+              onClick={() => setPhase('card_generator')}
+              className="w-full h-14 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
             >
-              <Zap className="w-6 h-6 mr-3" />
-              Wild Encounter
-            </Button>
-
-            <Button
-              onClick={() => setPhase('collection')}
-              variant="outline"
-              className="w-full h-14 text-lg border-2 border-slate-300 hover:bg-slate-50"
-            >
-              <BookOpen className="w-6 h-6 mr-3" />
-              My Collection
-              {collection.length > 0 && (
-                <Badge className="ml-2 bg-red-500 text-white">
-                  {collection.length}
-                </Badge>
-              )}
+              <CreditCard className="w-6 h-6 mr-3" />
+              Generate Cards
             </Button>
           </CardContent>
         </Card>
-
-        {collection.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-            <p className="text-white/80 text-sm flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              {collection.length} Pokemon caught!
-            </p>
-          </motion.div>
-        )}
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="relative z-10 mt-8 text-center text-white/70 text-sm"
+        className="relative z-10 mt-8 text-center text-white/80 text-sm max-w-xs"
       >
-        <p>Scan any QR code to summon a Pokemon</p>
-        <p>Based on 1000+ real Pokemon with authentic stats!</p>
+        <p className="mb-2">1. Generate & print Pokemon cards</p>
+        <p className="mb-2">2. Scan a wild Pokemon card to battle</p>
+        <p>3. Scan your Pokemon card to fight!</p>
       </motion.div>
     </div>
   );

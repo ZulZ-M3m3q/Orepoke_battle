@@ -54,7 +54,7 @@ const pokemonCache = new Map<number, Pokemon>();
 const moveCache = new Map<string, PokemonMove>();
 
 export async function fetchPokemon(idOrName: number | string): Promise<Pokemon | null> {
-  const id = typeof idOrName === 'number' ? idOrName : parseInt(idOrName, 10);
+  const id = typeof idOrName === 'number' ? idOrName : parseInt(String(idOrName), 10);
   
   if (!isNaN(id) && pokemonCache.has(id)) {
     return pokemonCache.get(id)!;
@@ -166,33 +166,50 @@ export async function getRandomWildPokemon(minLevel: number = 5, maxLevel: numbe
   return fetchPokemon(randomId);
 }
 
-export async function getPokemonByQRData(qrData: string): Promise<Pokemon | null> {
+export interface QRValidationResult {
+  isValid: boolean;
+  pokemonId?: number;
+  pokemonName?: string;
+  error?: string;
+}
+
+export function validatePokemonQR(qrData: string): QRValidationResult {
   try {
     const parsed = JSON.parse(qrData);
-    if (parsed.pokemonId && typeof parsed.pokemonId === 'number') {
-      const pokemon = await fetchPokemon(parsed.pokemonId);
-      if (pokemon) return pokemon;
+    if (parsed.pokemonId && typeof parsed.pokemonId === 'number' && parsed.pokemonId >= 1 && parsed.pokemonId <= 1010) {
+      return {
+        isValid: true,
+        pokemonId: parsed.pokemonId,
+        pokemonName: parsed.name,
+      };
     }
+    return {
+      isValid: false,
+      error: 'Invalid Pokemon QR code format',
+    };
   } catch {
+    return {
+      isValid: false,
+      error: 'Not a valid Pokemon QR code. Please scan a card generated from this app.',
+    };
+  }
+}
+
+export async function getPokemonByQRData(qrData: string): Promise<Pokemon | null> {
+  const validation = validatePokemonQR(qrData);
+  
+  if (validation.isValid && validation.pokemonId) {
+    return fetchPokemon(validation.pokemonId);
   }
   
-  const numericId = parseInt(qrData, 10);
-  if (!isNaN(numericId) && numericId >= 1 && numericId <= 1010) {
-    const pokemon = await fetchPokemon(numericId);
-    if (pokemon) return pokemon;
-  }
-  
-  const hash = qrData.split('').reduce((acc, char, idx) => {
-    return acc + char.charCodeAt(0) * (idx + 1);
-  }, 0);
-  const pokemonId = (Math.abs(hash) % 898) + 1;
-  return fetchPokemon(pokemonId);
+  return null;
 }
 
 export function generateQRDataForPokemon(pokemon: Pokemon): string {
   return JSON.stringify({
     pokemonId: pokemon.id,
     name: pokemon.name,
-    timestamp: Date.now(),
+    type: 'pokemon-qr-battle',
+    version: 1,
   });
 }

@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { usePokemonGame } from '@/lib/stores/usePokemonGame';
 import { MainMenu } from '@/components/game/MainMenu';
 import { QRScanner } from '@/components/game/QRScanner';
 import { BattleScene } from '@/components/game/BattleScene';
-import { Collection } from '@/components/game/Collection';
-import { PokemonCard } from '@/components/game/PokemonCard';
+import { CardGenerator } from '@/components/game/CardGenerator';
+import { PrintableCard } from '@/components/game/PrintableCard';
 import '@fontsource/inter';
 
 function LoadingScreen() {
@@ -22,32 +22,46 @@ function LoadingScreen() {
 }
 
 function App() {
-  const { phase, selectedCard, setPhase, selectCard } = usePokemonGame();
+  const { phase, setPhase, caughtPokemon, resetGame } = usePokemonGame();
+  const [showCaughtCard, setShowCaughtCard] = useState(false);
+
+  const handleShowCard = () => {
+    setShowCaughtCard(true);
+  };
+
+  const handleCloseCard = () => {
+    setShowCaughtCard(false);
+    resetGame();
+  };
 
   return (
     <Suspense fallback={<LoadingScreen />}>
       <div className="w-screen h-screen overflow-hidden">
         {phase === 'menu' && <MainMenu />}
         
-        {phase === 'scanning' && (
-          <QRScanner onClose={() => setPhase('menu')} />
+        {phase === 'card_generator' && (
+          <CardGenerator onBack={() => setPhase('menu')} />
+        )}
+        
+        {phase === 'scan_wild' && (
+          <QRScanner mode="wild" onClose={() => setPhase('menu')} />
+        )}
+        
+        {phase === 'scan_player' && (
+          <QRScanner mode="player" onClose={() => setPhase('menu')} />
         )}
         
         {(phase === 'battle' || phase === 'catching' || phase === 'caught' || 
-          phase === 'victory' || phase === 'defeat' || phase === 'escaped') && (
-          <BattleScene />
+          phase === 'victory' || phase === 'defeat') && (
+          <BattleScene onShowCard={handleShowCard} />
         )}
         
-        {phase === 'collection' && <Collection />}
-        
-        {phase === 'card_view' && selectedCard && (
-          <>
-            <Collection />
-            <PokemonCard 
-              pokemon={selectedCard} 
-              onClose={() => selectCard(null)} 
-            />
-          </>
+        {showCaughtCard && caughtPokemon && (
+          <PrintableCard 
+            pokemon={caughtPokemon} 
+            onClose={handleCloseCard}
+            title="Pokemon Caught!"
+          />
         )}
       </div>
     </Suspense>

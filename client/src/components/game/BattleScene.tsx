@@ -1,14 +1,17 @@
 import { usePokemonGame } from '@/lib/stores/usePokemonGame';
 import { TYPE_COLORS } from '@/lib/pokemon/types';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Swords, Circle, ArrowLeft, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function BattleScene() {
+interface BattleSceneProps {
+  onShowCard: () => void;
+}
+
+export function BattleScene({ onShowCard }: BattleSceneProps) {
   const {
     playerPokemon,
     wildPokemon,
@@ -17,9 +20,7 @@ export function BattleScene() {
     phase,
     useMove,
     attemptCatch,
-    runAway,
-    setPhase,
-    resetBattle,
+    resetGame,
   } = usePokemonGame();
 
   if (!playerPokemon || !wildPokemon) {
@@ -168,6 +169,7 @@ export function BattleScene() {
                   log.type === 'effective' ? 'text-green-400' :
                   log.type === 'critical' ? 'text-yellow-400' :
                   log.type === 'catch' ? 'text-purple-400' :
+                  log.type === 'error' ? 'text-red-500' :
                   'text-slate-300'
                 }`}
               >
@@ -199,26 +201,6 @@ export function BattleScene() {
           </div>
         )}
 
-        {phase === 'battle' && isPlayerTurn && (
-          <div className="flex gap-2 p-3 pt-0">
-            <Button
-              onClick={attemptCatch}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-            >
-              <Circle className="w-4 h-4 mr-2 fill-white" />
-              Catch
-            </Button>
-            <Button
-              onClick={runAway}
-              variant="outline"
-              className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Run
-            </Button>
-          </div>
-        )}
-
         {phase === 'catching' && (
           <div className="p-6 flex flex-col items-center">
             <motion.div
@@ -233,37 +215,67 @@ export function BattleScene() {
           </div>
         )}
 
-        {(phase === 'caught' || phase === 'victory' || phase === 'defeat' || phase === 'escaped') && (
+        {phase === 'victory' && (
           <div className="p-4 flex flex-col items-center gap-3">
             <div className="flex items-center gap-2 text-lg font-bold">
-              {phase === 'caught' && (
-                <>
-                  <Sparkles className="w-6 h-6 text-yellow-400" />
-                  <span className="text-yellow-400">Pokemon Caught!</span>
-                </>
-              )}
-              {phase === 'victory' && <span className="text-green-400">Victory!</span>}
-              {phase === 'defeat' && <span className="text-red-400">Defeat...</span>}
-              {phase === 'escaped' && <span className="text-slate-400">Got Away Safely</span>}
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+              <span className="text-green-400">Victory!</span>
             </div>
             
             <div className="flex gap-2">
-              {phase === 'caught' && (
-                <Button
-                  onClick={() => setPhase('card_view')}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500"
-                >
-                  View Card
-                </Button>
-              )}
               <Button
-                onClick={resetBattle}
+                onClick={attemptCatch}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+              >
+                <Circle className="w-4 h-4 mr-2 fill-white" />
+                Catch Pokemon
+              </Button>
+              <Button
+                onClick={resetGame}
                 variant="outline"
                 className="border-slate-600 text-slate-300"
               >
                 Return to Menu
               </Button>
             </div>
+          </div>
+        )}
+
+        {phase === 'caught' && (
+          <div className="p-4 flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2 text-lg font-bold">
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+              <span className="text-yellow-400">Pokemon Caught!</span>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                onClick={onShowCard}
+                className="bg-gradient-to-r from-purple-500 to-pink-500"
+              >
+                View & Download Card
+              </Button>
+              <Button
+                onClick={resetGame}
+                variant="outline"
+                className="border-slate-600 text-slate-300"
+              >
+                Return to Menu
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {phase === 'defeat' && (
+          <div className="p-4 flex flex-col items-center gap-3">
+            <span className="text-red-400 text-lg font-bold">Defeat...</span>
+            <Button
+              onClick={resetGame}
+              variant="outline"
+              className="border-slate-600 text-slate-300"
+            >
+              Return to Menu
+            </Button>
           </div>
         )}
 
