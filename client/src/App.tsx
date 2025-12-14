@@ -1,73 +1,56 @@
-import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect, useState } from "react";
-import { KeyboardControls } from "@react-three/drei";
-// import { useAudio } from "./lib/stores/useAudio";
-import "@fontsource/inter";
+import { Suspense } from 'react';
+import { usePokemonGame } from '@/lib/stores/usePokemonGame';
+import { MainMenu } from '@/components/game/MainMenu';
+import { QRScanner } from '@/components/game/QRScanner';
+import { BattleScene } from '@/components/game/BattleScene';
+import { Collection } from '@/components/game/Collection';
+import { PokemonCard } from '@/components/game/PokemonCard';
+import '@fontsource/inter';
 
-// Import our game components
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-red-600 to-yellow-400 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-b from-red-400 to-white border-4 border-slate-800 animate-bounce relative">
+          <div className="absolute inset-x-0 top-1/2 h-1 bg-slate-800 -translate-y-1/2" />
+          <div className="absolute left-1/2 top-1/2 w-4 h-4 rounded-full bg-white border-2 border-slate-800 -translate-x-1/2 -translate-y-1/2" />
+        </div>
+        <p className="text-white text-xl font-bold">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
-// Define control keys for the game
-// const controls = [
-//   { name: "forward", keys: ["KeyW", "ArrowUp"] },
-//   { name: "backward", keys: ["KeyS", "ArrowDown"] },
-//   { name: "leftward", keys: ["KeyA", "ArrowLeft"] },
-//   { name: "rightward", keys: ["KeyD", "ArrowRight"] },
-//   { name: "punch", keys: ["KeyJ"] },
-//   { name: "kick", keys: ["KeyK"] },
-//   { name: "block", keys: ["KeyL"] },
-//   { name: "special", keys: ["Space"] },
-// ];
-
-// Main App component
 function App() {
-  //const { gamePhase } = useFighting();
-  const [showCanvas, setShowCanvas] = useState(false);
-
-  // Show the canvas once everything is loaded
-  useEffect(() => {
-    setShowCanvas(true);
-  }, []);
+  const { phase, selectedCard, setPhase, selectCard } = usePokemonGame();
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}/>
-    // {showCanvas && (
-    //   <KeyboardControls map={controls}>
-    //     {gamePhase === 'menu' && <Menu />}
-
-    //     {gamePhase === 'character_selection' && <CharacterSelection />}
-
-    //     {(gamePhase === 'fighting' || gamePhase === 'round_end' || gamePhase === 'match_end') && (
-    //       <>
-    //         <Canvas
-    //           shadows
-    //           camera={{
-    //             position: [0, 2, 8],
-    //             fov: 45,
-    //             near: 0.1,
-    //             far: 1000
-    //           }}
-    //           gl={{
-    //             antialias: true,
-    //             powerPreference: "default"
-    //           }}
-    //         >
-    //           <color attach="background" args={["#111111"]} />
-
-    //           {/* Lighting */}
-    //           <Lights />
-
-    //           <Suspense fallback={null}>
-    //           </Suspense>
-    //         </Canvas>
-    //         <GameUI />
-    //       </>
-    //     )}
-
-    //     <ShortcutManager />
-    //     <SoundManager />
-    //   </KeyboardControls>
-    // )}
-    //</div>
+    <Suspense fallback={<LoadingScreen />}>
+      <div className="w-screen h-screen overflow-hidden">
+        {phase === 'menu' && <MainMenu />}
+        
+        {phase === 'scanning' && (
+          <QRScanner onClose={() => setPhase('menu')} />
+        )}
+        
+        {(phase === 'battle' || phase === 'catching' || phase === 'caught' || 
+          phase === 'victory' || phase === 'defeat' || phase === 'escaped') && (
+          <BattleScene />
+        )}
+        
+        {phase === 'collection' && <Collection />}
+        
+        {phase === 'card_view' && selectedCard && (
+          <>
+            <Collection />
+            <PokemonCard 
+              pokemon={selectedCard} 
+              onClose={() => selectCard(null)} 
+            />
+          </>
+        )}
+      </div>
+    </Suspense>
   );
 }
 
